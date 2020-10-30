@@ -2,6 +2,7 @@
 
 Standard Functionality
 The minimal functionality that your solution should be able to demonstrate is:
+
 • a menu or command+argument based front end (Jack)
 • creating a new repository (Ethan)
 • adding files to the repository (Ethan)
@@ -10,6 +11,7 @@ The minimal functionality that your solution should be able to demonstrate is:
 
 Simple Extensions
 There are many possible extensions that you could pursue, such as:
+
 • multi-level menus / complex arguments
 • allowing access to multiple repositories (accessed by name)
 • being able to edit a text file from within your script
@@ -22,6 +24,7 @@ found”
 
 Further Extensions
 More advanced extensions could include:
+
 • providing secure access to sets of files, exploiting the user ID and group ID stored by UNIX
 (you may need to arrange to have several accounts created for you to test this extension)
 • roll back i.e. return to an earlier version of the file(s), either by undoing the edits or by
