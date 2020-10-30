@@ -12,15 +12,14 @@ The minimal functionality that your solution should be able to demonstrate is:
 Simple Extensions
 There are many possible extensions that you could pursue, such as:
 
-• multi-level menus / complex arguments
-• allowing access to multiple repositories (accessed by name)
-• being able to edit a text file from within your script
+• multi-level menus / complex arguments (Jack)
+• allowing access to multiple repositories (accessed by name) (Jack)
+• being able to edit a text file from within your script (Haseeb)
 • some form of validation on what the user inputs e.g. “invalid entry” or “that file was not
-found”
-3
-• automatically listing the contents of the file repository currently in use
-• optionally adding user comments into log entries
-• automatically making backup copies of each file which is edited
+found” (Everyone)
+• automatically listing the contents of the file repository currently in use (Jack)
+• optionally adding user comments into log entries (Ethan)
+• automatically making backup copies of each file which is edited (Haseeb)
 
 Further Extensions
 More advanced extensions could include:
