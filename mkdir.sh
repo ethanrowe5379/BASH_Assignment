@@ -8,6 +8,7 @@ until [[ "${validation}" = "Y" ]]; do
 done
 
 mkdir $dirName
-
+read -p "Would you like to add comment to the log file?(Y/N)" addCom
+log $dirName Directory $addCom
 
 

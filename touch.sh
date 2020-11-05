@@ -7,3 +7,5 @@ until [[ "${validation}" = "Y" ]]; do
 done
 
 touch $fileName
+read -p "Would you like to add comment to the log file?(Y/N)" addCom
+log $fileName Directory $addCom
