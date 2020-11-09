@@ -21,6 +21,8 @@ touch(){
 		read -p "Is $fileName Correct? (Y/N)" validation
 	done
 	touch $fileName
+	read -p "Would you like to add a comment to the log file?(Y/N)" addCom
+	loginfo $dirName "New File" $addCom
 }
 mkdir(){
 	validation=N
@@ -30,18 +32,17 @@ mkdir(){
 		read -p "Is $dirName Correct? (Y/N)" validation
 	done
 	mkdir $dirName
+	read -p "Would you like to add a comment to the log file?(Y/N)" addCom
+	loginfo $dirName "New Directory" $addCom
 }
 loginfo(){
-	validation=E
-	toFile=""
-	until [[ "${validation}" = "EOF" ]]; do
-		#statements
-		echo $toFile
-		read -p "Please Enter the Log Information: " userInput
-		toFile="${toFile} ${userInput} \n " 
-		read -p "To Finish type 'EOF'" validation
-	done
-	echo $toFile >> changes.log
+	if [ "${3}" = "Y" ]; then
+		echo $(date +"[%d-%m-%Y][%H:%M:%S]") " $2 under the name $1" | tee -a changes.log
+		read -p "Please add a small additional comment to the log file:" userCom
+		echo $(date +"[%d-%m-%Y][%H:%M:%S]") "$userCom" | tee -a changes.log
+	else
+		echo $(date +"[%d-%m-%Y][%H:%M:%S]") " $2 under the name $1" | tee -a changes.log
+	fi
 }
 
 accessRepo(){
@@ -65,6 +66,8 @@ accessRepo(){
 		fi
 	done
 	echo $PWD
+	read -p "Would you like to add a comment to the log file?(Y/N)" addCom
+	loginfo $repo "Accesing Repo" $addCom
 }
 checkOutFile(){
 	validation="N"
@@ -101,6 +104,8 @@ checkOutFile(){
 			read -p "The name  of the file you entered isnt in this directory or is mispelt enter Y to exit N to try again(Y/N) :" validation
 		fi
 	done
+	read -p "Would you like to add a comment to the log file?(Y/N)" addCom
+	loginfo $file "Checked out File" $addCom
 }
 
 alterfile(){
@@ -152,6 +157,8 @@ alterfile(){
 				echo "invalid Input try again";;		
 		esac
 	done
+	read -p "Would you like to add a comment to the log file?(Y/N)" addCom
+	loginfo $file "Altered File" $addCom
 }
 Menu(){
 	exit="N"
