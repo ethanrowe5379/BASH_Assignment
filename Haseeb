@@ -1,0 +1,424 @@
+#!/bin/bash
+#
+# This system allow to create, remove repositories of files. Also it allow to handle files of a repository.
+# User can store files, add comments to modifications, create a log file with updates
+#
+
+syspath="./"
+current=""
+currentName=""
+clear
+
+# This routine create a new repository copying files from an existing folder
+createRepository()
+{
+    echo "This option allow you to create a new repository copying files from an existing folder"
+    echo "You must specify the folder where the files will be copied, please "
+    echo "don't use '.' or '..'"
+	echo "Please insert the folder where is stored your repository files:"
+	echo "Press enter to cancel"
+    lloop=1 # this variable control the loop below
+    while [ $lloop -eq 1 ]
+    do
+	    echo -n "Insert full path: "
+	    read fullpath
+        if [ -z "$fullpath" ]; then
+            #empty lets suppose user want to cancel
+            echo "Cancelled"
+            return
+        fi 
+        # check is a valid folder
+        if [ "$fullpath" == *".//"* ]; then
+            echo "Please don't use '.' or '..' Use absolute paths"
+            echo "Try again"
+            continue
+        fi
+        # Check it's a valid directory
+        if [ -d "$fullpath" ]; then
+    
+            # this is a valid folder
+	        lloop=0 # finish the loop
+         
+        else
+            echo "Invalid folder. Try again"
+            continue
+        fi
+
+    done
+    # remove trailing slash if any 
+    fullpath=`echo "$fullpath" | sed 's/\/$//'`
+    #change any '/' to '_'
+    current=`echo "$fullpath" | sed -r 's/\//_/g'`
+    current=".vcs."$current
+    if [ -d "$current" ]; then
+        echo "Repository already exist. Leaving."
+        echo
+        continue
+    fi
+
+	mkdir $current
+	cp $fullpath/* $current
+    echo "Done."
+
+}
+
+# This option create a new empty repository
+createEmptyRepository()
+{
+	echo "This option allow you to create a new empty repository"
+	echo "Please insert the name of the new repository:"
+	echo "Press enter to cancel"
+    lloop=1 # this variable control the loop below
+    while [ $lloop -eq 1 ]
+    do
+	    echo -n "Insert the name of the repository: "
+	    read repository
+        if [ -z "$repository" ]; then
+            #empty lets suppose user want to cancel
+            echo "Cancelled"
+            return
+        fi 
+		lloop=0 # finish the loop
+
+    done
+    current=".vcs."$repository
+    if [ -d "$current" ]; then
+        echo "Repository already exist. Leaving."
+        echo
+        continue
+    fi
+
+	mkdir $current
+    echo "Done."
+}
+
+# this function allow to remove a repository
+removeRepository()
+{
+	echo "Remove a repotitory"
+    echo "Press enter to cancel"
+    lloop=1 # this variable control the loop below
+    while [ $lloop -eq 1 ]
+    do
+	    echo -n "Insert the repository name: "
+	    read name
+        path=".vcs."$name
+        if [ -z "$path" ]; then
+            #empty lets suppose user want to cancel
+            echo "Cancelled"
+            return
+        fi 
+        if [ -d "$path" ]; then
+            # this is a valid repository
+	        lloop=0 # finish the loop
+        else
+            echo "Invalid folder. Try again"
+            continue
+        fi
+
+    done
+    current=$path
+    
+	# Everything looks ok  
+	# 
+    echo  "Enter yes or no"
+	echo -n "Are you sure you want to remove the repository? "
+	read answer
+	case "$answer" in
+	"y" ) ;;
+	"Y" ) ;;
+	"yes" ) ;;
+	"YES" );;
+	* ) return ;;
+	esac
+	# remove it
+	rm -fr $path
+    echo "Done"
+    current=""
+}
+
+# This repository select a repository from a list
+selectRepository()
+{
+    echo "Select a repository from the following list:"
+    # display only the folder's name and remove the prefix
+    # send any error to /dev/null
+    n=`ls -d .vcs.* 2> /dev/null | wc -l`   # count how many folder we found
+    if [ "$n" -eq 0 ]; then
+        echo "No repositories reqistered at this momment"
+        echo "You must create one first"
+        return
+    fi
+    list=( `ls -d .vcs.* | sed -e 's/.vcs.//'` )
+    idx=0
+    while [ $idx -lt $n ]
+    do
+        let "idx2 = idx + 1"
+
+        reponame=${list[idx]}
+        reponame=`echo "$reponame" | sed -r 's/_/\//g'`
+        echo $idx2") "$reponame
+        let "idx = idx + 1"
+    done
+    lloop=1
+    while [ $lloop -eq 1 ]
+    do
+	    echo -n "Insert your option: "
+	    read number
+        if [ -z "$number" ]; then
+            #empty lets suppose user want to cancel
+            echo "Cancelled"
+            return
+        fi 
+        let "idx = number + 0"  # integer conversion
+        # check is a valid option
+        if [ $idx -lt 1 -o $idx -gt $n ]; then
+            echo "Invalid option. Try again"
+            continue
+        else
+            # this is a valid folder
+	        lloop=0 # finish the loop
+        fi
+
+    done
+    let "idx = idx - 1"  # back to index
+    current=".vcs."${list[idx]}    # current Repository path 
+    currentName=${list[idx]}        # current Repository name
+    # convert back to full path and store it in currentName
+    currentName=`echo "$currentName" | sed -r 's/_/\//g'`
+	echo $currentName
+}
+
+# This routine display the content of the repository,
+# ie the files stored in the repository
+displayRepository()
+{
+    checkRepository
+    echo "Current Repository: "$currentName
+    echo "Date   File name"
+    echo "****************"
+    ls -l $current | awk '{print $6, $7, $9}'
+    echo
+}
+
+# this function check the current repository is selected
+checkRepository()
+{
+    if [ -z "$current" ]; then
+        # repository not selected
+        echo "Repository not selected"
+	    selectRepository 
+        # warn we're editing a file
+        echo "Manage Repository"
+    fi
+}
+
+# Submenu that provide general functions add file, edit file, etc
+manageRepository()
+{
+    checkRepository
+    
+    echo "Current Repository: "$currentName
+    echo "Date   File name"
+    echo "****************"
+    ls -l $current | awk '{print $6, $7, $9}'
+    echo
+    lloop=1 # this variable control the loop below
+
+
+
+    while [ $lloop -eq 1 ]
+    do
+        echo "Please choose one option below"
+        echo
+	    echo "1) Add File to the repository"
+        echo "2) Edit File"
+        echo "3) Restore File"
+        echo "4) Archive current repository (using tar)"
+	    echo "B) Return to previous menu"
+	    echo -n "Enter Choice: "
+	    read opt	# read the choice
+	    case "$opt" in
+	    "b" ) lloop=0 # finish the loop
+	    ;;
+	    "B" ) lloop=0
+	    ;;
+	    "1") addFile
+	    ;;
+	    "2") editFile
+	    ;;
+	    "3") restoreFile
+	    ;;
+	    "4") archiveRepository 
+	    ;;
+	    * ) echo "Invalid option try again"
+        ;;
+	    esac
+    done
+}
+
+# This routine allow to add a file to the repository
+addFile()
+{
+    echo "This option allow you to add a file to the repository copying the file from an existing path"
+    echo "You must specify the folder where the files will be copied, please "
+    echo "don't use '.' or '..'"
+	echo "Please insert the path of the file:"
+	echo "Press enter to cancel"
+    lloop=1 # this variable control the loop below
+    while [ $lloop -eq 1 ]
+    do
+	    echo -n "Insert full path: "
+	    read fullpath
+        if [ -z "$fullpath" ]; then
+            #empty lets suppose user want to cancel
+            echo "Cancelled"
+            return
+        fi 
+        # check is a valid folder
+        if [ "$fullpath" == *".//"* ]; then
+            echo "Please don't use '.' or '..' Use absolute paths"
+            echo "Try again"
+            continue
+        fi
+        # Check it's a valid file
+        if [ -f "$fullpath" ]; then
+    
+            # this is a valid folder
+	        lloop=0 # finish the loop
+         
+        else
+            echo "Invalid file. Try again"
+            continue
+        fi
+
+    done
+    
+	cp $fullpath $current
+    echo "Done."
+
+}
+
+# Allow to edit a file
+editFile()
+{
+    lloop=1 # this variable control the loop below
+    while [ $lloop -eq 1 ]
+    do
+        echo -n "Insert the file name: "
+	    read file	# read the choice
+        if [ -z "$file" ]; then
+            #empty lets suppose user want to cancel
+            echo "Cancelled"
+            return
+        fi 
+        # we check file in the user's folder
+        thispath=".vcs."$currentName"/"$file
+        if [ ! -f "$thispath" ]; then
+            echo "Invalid file. Try again"
+            continue
+        fi
+        # generate a backup of each file before edit
+        cp -f $thispath $current"/"$file".bak"
+        vi $thispath
+        lloop=0
+    done 
+}
+
+# Restore a file from a previous edit session
+restoreFile()
+{
+    echo "This option restore a file backup"
+    lloop=1 # this variable control the loop below
+    while [ $lloop -eq 1 ]
+    do
+        echo -n "Insert the file name: "
+	    read file	# read the choice
+        if [ -z "$file" ]; then
+            #empty lets suppose user want to cancel
+            echo "Cancelled"
+            return
+        fi 
+        # we check this file exist in the repository
+        thispath=$current"/"$file
+        if [ ! -f "$thispath" ]; then
+            echo "Invalid file. Try again"
+            continue
+        fi
+
+        # Now we check there are a backup of this file
+        thispath=$current"/"$file".bak"
+        if [ ! -f "$thispath" ]; then
+            echo "Unfortunately there are no backup of such file"
+            pause
+            return
+        fi
+        # finally restore the file
+        cp -f $thispath $currentName"/"$file 
+        
+        lloop=0
+    done 
+}
+
+# This routine store the current repository in a tar file
+
+archiveRepository()
+{
+    # validate there are a repository selected
+    checkRepository
+    echo "This option prepare a tar file of the current selected repository"
+    # prepare the archive name
+    day=$(date -d "$D" '+%d')
+    month=$(date -d "$D" '+%m')
+    year=$(date -d "$D" '+%Y')
+    archiveName=`echo $current | sed -e 's/.vcs.//'`
+    archiveName=$archiveName"-"$year"-"$month"-"$day".tar"
+
+    echo "Repository stored in "$archiveName
+    tar cvf $archiveName $currentName
+ 
+}
+
+# Standard routine to display a "press a key" to continue 
+pause()
+{
+	echo -n "Press RETURN to continue... "
+	read key
+}
+
+# this is the function to display main menu
+inloop=1 # this variable control the loop below
+
+while [ $inloop -eq 1 ]
+do
+	echo "       *************************************"
+	echo "       **    Version Control System Menu  **"
+	echo "       *************************************"
+	echo "1) Create a new repository copying files from folder"
+	echo "2) Create a new empty repository"
+	echo "3) Remove a repository"
+	echo "4) Select a repository"
+	echo "5) Display info of current repository"
+	echo "6) Manage current repository"
+	echo "Q) Quit"
+	echo -n "Enter Choice: "	# the -n make the cursor remain in the same line
+	read opt	# read the choice
+	case "$opt" in
+	"q" ) inloop=0 # finish the loop
+	;;
+	"Q" ) inloop=0 # test too uppercase
+	;;
+	"1") createRepository
+	;;
+	"2") createEmptyRepository
+	;;
+	"3") removeRepository
+	;;
+	"4") selectRepository 
+	;;
+	"5") displayRepository 
+	;;
+	"6") manageRepository 
+	;;
+	esac
+done
